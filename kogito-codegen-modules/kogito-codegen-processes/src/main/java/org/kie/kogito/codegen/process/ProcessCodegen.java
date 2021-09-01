@@ -220,6 +220,7 @@ public class ProcessCodegen extends AbstractGenerator {
     // used on tests only, do not expose
     static List<Process> parseProcesses(Collection<File> processFiles) {
         List<Process> processes = new ArrayList<>();
+        System.out.println(processes.size());
         for (File processSourceFile : processFiles) {
             try {
                 FileSystemResource r = new FileSystemResource(processSourceFile);
@@ -237,7 +238,7 @@ public class ProcessCodegen extends AbstractGenerator {
             } catch (RuntimeException e) {
                 throw new ProcessCodegenException(processSourceFile.getAbsolutePath(), e);
             }
-        }
+        };
         return processes;
     }
 

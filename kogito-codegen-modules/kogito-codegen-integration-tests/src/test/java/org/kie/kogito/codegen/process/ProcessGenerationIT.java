@@ -15,19 +15,8 @@
  */
 package org.kie.kogito.codegen.process;
 
-import java.io.File;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.Set;
+import java.io.*;
+import java.util.*;
 import java.util.function.BiConsumer;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -104,28 +93,28 @@ import static org.junit.jupiter.api.Assertions.fail;
 public class ProcessGenerationIT extends AbstractCodegenIT {
 
     private static final Collection<String> IGNORED_PROCESS_META = Arrays.asList("Definitions", "BPMN.Connections", "BPMN.Associations", "ItemDefinitions");
-    private static final Path BASE_PATH = Paths.get("src/test/resources");
 
     static Stream<String> processesProvider() throws Exception {
-        Set<String> ignoredFiles = Files.lines(Path.of(Thread.currentThread().getContextClassLoader().getResource("org/kie/kogito/codegen/process/process-generation-test.skip.txt").toURI()))
-                .collect(Collectors.toSet());
-        return Files.find(BASE_PATH, 10, ((path, basicFileAttributes) -> basicFileAttributes.isRegularFile()
-                && (ProcessCodegen.SUPPORTED_BPMN_EXTENSIONS.stream().anyMatch(ext -> path.getFileName().toString().endsWith(ext))
-                        || ProcessCodegen.SUPPORTED_SW_EXTENSIONS.keySet().stream().anyMatch(ext -> path.getFileName().toString().endsWith(ext)))))
-                .map(BASE_PATH::relativize)
-                .map(Path::toString)
-                .filter(p -> ignoredFiles.stream().noneMatch(ignored -> p.contains(ignored)));
+        List<String> ignoredFiles = readLinesFromResource("org/kie/kogito/codegen/process/process-generation-test.skip.txt");
+        List<String> testResources = readLinesFromResource("test-resource-index.txt");
+
+        return testResources.stream()
+                .filter(it -> ProcessCodegen.SUPPORTED_BPMN_EXTENSIONS.stream().anyMatch(ext -> it.endsWith(ext))
+                        || ProcessCodegen.SUPPORTED_SW_EXTENSIONS.keySet().stream().anyMatch(ext -> it.endsWith(ext)))
+                .filter(p -> ignoredFiles.stream().noneMatch(ignored -> p.startsWith(ignored)));
     }
 
     @ParameterizedTest
     @MethodSource("processesProvider")
     public void testProcessGeneration(String processFile) throws Exception {
+        System.out.println(processFile);
         // for some tests this needs to be set to true
         System.setProperty("jbpm.enable.multi.con", "true");
         List<org.kie.api.definition.process.Process> processes = ProcessCodegen.parseProcesses(Stream.of(processFile)
                 .map(resource -> {
-                    String file = Thread.currentThread().getContextClassLoader().getResource(resource).getFile();
-                    return new File(file);
+                    File f = getFileFromResource(resource);
+                    System.out.println(f.getAbsolutePath());
+                    return f;
                 })
                 .collect(Collectors.toList()));
         RuleFlowProcess expected = (RuleFlowProcess) processes.get(0);

@@ -15,12 +15,11 @@
  */
 package org.kie.kogito.codegen;
 
-import java.io.File;
+import java.io.*;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -29,7 +28,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.function.BiFunction;
+import java.util.stream.Collectors;
 
+import org.apache.commons.io.FileUtils;
 import org.drools.compiler.compiler.io.memory.MemoryFileSystem;
 import org.kie.kogito.Application;
 import org.kie.kogito.codegen.api.AddonsConfig;
@@ -134,9 +135,9 @@ public class AbstractCodegenIT {
     private static Collection<CollectedResource> toCollectedResources(String basePath, List<String> strings) {
         File[] files = strings
                 .stream()
-                .map(resource -> new File(basePath, resource))
+                .map(resource -> getFileFromResource(resource))
                 .toArray(File[]::new);
-        return CollectedResourceProducer.fromFiles(Paths.get(basePath), files);
+        return CollectedResourceProducer.fromFiles(Path.of(System.getProperty("java.io.tmpdir")), files);
     }
 
     public static Collection<CollectedResource> toCollectedResources(List<String> strings) {
@@ -170,6 +171,7 @@ public class AbstractCodegenIT {
 
         for (TYPE type : TYPE.values()) {
             if (resourcesTypeMap.containsKey(type) && !resourcesTypeMap.get(type).isEmpty()) {
+                LOGGER.error("Doing sth");
                 appGen.registerGeneratorIfEnabled(generatorTypeMap.get(type).apply(context, resourcesTypeMap.get(type)));
             }
         }
@@ -264,5 +266,32 @@ public class AbstractCodegenIT {
             }
             return super.findClass(name);
         }
+    }
+
+    protected static List<String> readLinesFromResource(String resource) {
+        InputStream resourceAsStream = Thread.currentThread().getContextClassLoader().getResourceAsStream(resource);
+        BufferedReader reader = new BufferedReader(new InputStreamReader(resourceAsStream));
+        List<String> lines = reader.lines().collect(Collectors.toList());
+        return lines;
+    }
+
+    /**
+     * Creating a temporary file from classpath resource. Filename is constructed from prefix:suffix pair. Prefix
+     * is an original resource name up to first dot '.', the rest is taken as suffix (considered an extension).
+     * 
+     * @param resource
+     * @return
+     */
+    protected static File getFileFromResource(String resource) {
+        InputStream fileContents = Thread.currentThread().getContextClassLoader().getResourceAsStream(resource);
+        File f = null;
+        try {
+            String[] split = resource.split("\\.", 2);
+            f = File.createTempFile(split[0], "." + split[1]);
+            FileUtils.copyInputStreamToFile(fileContents, f);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return f;
     }
 }

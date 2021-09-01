@@ -84,4 +84,41 @@
         </dependency>
     </dependencies>
 
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-antrun-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>run</goal>
+                        </goals>
+                        <phase>generate-test-resources</phase>
+                        <configuration>
+                            <target>
+                                <fileset id="dist.contents" dir="src/test/resources" includes="**/*"/>
+                                <property name="prop.dist.contents" refid="dist.contents"/>
+                                <loadresource property="lines">
+                                    <propertyresource name="prop.dist.contents"/>
+                                    <filterchain>
+                                        <tokenfilter>
+                                            <filetokenizer/>
+                                            <replacestring from=";" to="${line.separator}"/>
+                                        </tokenfilter>
+                                    </filterchain>
+                                </loadresource>
+                                <echo file="${project.build.directory}/test-classes/test-resource-index.txt">${lines}</echo>
+                            </target>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin> <!-- this way module defines itself as included in kogito-quarkus-test-list artifact -->
+                <groupId>org.l2x6.rpkgtests</groupId>
+                <artifactId>rpkgtests-maven-plugin</artifactId>
+            </plugin>
+        </plugins>
+    </build>
+
 </project>
