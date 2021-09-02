@@ -77,8 +77,8 @@ public class AbstractCodegenIT {
     private AddonsConfig addonsConfig = AddonsConfig.DEFAULT;
 
     private static final JavaCompiler JAVA_COMPILER = JavaCompilerFactory.loadCompiler(JavaConfiguration.CompilerType.NATIVE, "11");
-    private static final String TEST_JAVA = "src/test/java/";
-    private static final String TEST_RESOURCES = "src/test/resources";
+    protected static final Path TEST_JAVA = Path.of("src/test/java/");
+    protected static final Path TEST_RESOURCES = Path.of("src/test/resources");
 
     private static final Map<TYPE, BiFunction<KogitoBuildContext, List<String>, Generator>> generatorTypeMap = new HashMap<>();
 
@@ -132,12 +132,16 @@ public class AbstractCodegenIT {
         generatorTypeMap.put(TYPE.OPENAPI, (context, strings) -> OpenApiClientCodegen.ofCollectedResources(context, toCollectedResources(TEST_RESOURCES, strings)));
     }
 
-    private static Collection<CollectedResource> toCollectedResources(String basePath, List<String> strings) {
+    protected static boolean runningFromTestJar() {
+        return !Files.exists(TEST_RESOURCES) && !Files.exists(TEST_JAVA);
+    }
+
+    protected static Collection<CollectedResource> toCollectedResources(Path basePath, List<String> strings) {
         File[] files = strings
                 .stream()
-                .map(resource -> getFileFromResource(resource))
+                .map(resource -> new File(basePath.toString(), resource))
                 .toArray(File[]::new);
-        return CollectedResourceProducer.fromFiles(Path.of(System.getProperty("java.io.tmpdir")), files);
+        return CollectedResourceProducer.fromFiles(basePath, files);
     }
 
     public static Collection<CollectedResource> toCollectedResources(List<String> strings) {
@@ -171,7 +175,6 @@ public class AbstractCodegenIT {
 
         for (TYPE type : TYPE.values()) {
             if (resourcesTypeMap.containsKey(type) && !resourcesTypeMap.get(type).isEmpty()) {
-                LOGGER.error("Doing sth");
                 appGen.registerGeneratorIfEnabled(generatorTypeMap.get(type).apply(context, resourcesTypeMap.get(type)));
             }
         }
@@ -282,16 +285,25 @@ public class AbstractCodegenIT {
      * @param resource
      * @return
      */
-    protected static File getFileFromResource(String resource) {
+    private static File getFileFromResource(Path basePath, String resource) {
         InputStream fileContents = Thread.currentThread().getContextClassLoader().getResourceAsStream(resource);
-        File f = null;
+        File copiedResourceFile = null;
         try {
-            String[] split = resource.split("\\.", 2);
-            f = File.createTempFile(split[0], "." + split[1]);
-            FileUtils.copyInputStreamToFile(fileContents, f);
+            Path newResourceLocation = basePath.resolve(resource);
+            FileUtils.forceMkdirParent(newResourceLocation.toFile());
+            if (!Files.exists(newResourceLocation)) {
+                copiedResourceFile = Files.createFile(newResourceLocation).toFile();
+                FileUtils.copyInputStreamToFile(fileContents, copiedResourceFile);
+            }
         } catch (IOException e) {
-            e.printStackTrace();
+            throw new RuntimeException("Test failed while copying test resources.", e);
         }
-        return f;
+        return copiedResourceFile;
+    }
+
+    protected static void moveAllResourcesToDir() {
+        for (String resource : readLinesFromResource("test-resource-index.txt")) {
+            getFileFromResource(TEST_RESOURCES, resource);
+        }
     }
 }

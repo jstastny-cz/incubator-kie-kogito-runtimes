@@ -107,7 +107,6 @@ public class ProcessGenerationIT extends AbstractCodegenIT {
     @ParameterizedTest
     @MethodSource("processesProvider")
     public void testProcessGeneration(String processFile) throws Exception {
-        System.out.println(processFile);
         // for some tests this needs to be set to true
         System.setProperty("jbpm.enable.multi.con", "true");
         List<org.kie.api.definition.process.Process> processes = ProcessCodegen.parseProcesses(Stream.of(processFile)
