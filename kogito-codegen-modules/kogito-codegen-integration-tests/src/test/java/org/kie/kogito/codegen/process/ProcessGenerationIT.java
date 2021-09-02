@@ -110,11 +110,7 @@ public class ProcessGenerationIT extends AbstractCodegenIT {
         // for some tests this needs to be set to true
         System.setProperty("jbpm.enable.multi.con", "true");
         List<org.kie.api.definition.process.Process> processes = ProcessCodegen.parseProcesses(Stream.of(processFile)
-                .map(resource -> {
-                    File f = getFileFromResource(resource);
-                    System.out.println(f.getAbsolutePath());
-                    return f;
-                })
+                .map(resource -> new File(TEST_RESOURCES.toFile(), resource))
                 .collect(Collectors.toList()));
         RuleFlowProcess expected = (RuleFlowProcess) processes.get(0);
 
