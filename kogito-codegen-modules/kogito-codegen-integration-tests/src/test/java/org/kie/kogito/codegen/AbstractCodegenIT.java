@@ -130,10 +130,13 @@ public class AbstractCodegenIT {
         generatorTypeMap.put(TYPE.JAVA, (context, strings) -> IncrementalRuleCodegen.ofJavaResources(context, toCollectedResources(TEST_JAVA, strings)));
         generatorTypeMap.put(TYPE.PREDICTION, (context, strings) -> PredictionCodegen.ofCollectedResources(context, toCollectedResources(TEST_RESOURCES, strings)));
         generatorTypeMap.put(TYPE.OPENAPI, (context, strings) -> OpenApiClientCodegen.ofCollectedResources(context, toCollectedResources(TEST_RESOURCES, strings)));
+        if (isRunningFromTestJar()) {
+            moveAllResourcesToDir();
+        }
     }
 
-    protected static boolean runningFromTestJar() {
-        return !Files.exists(TEST_RESOURCES) && !Files.exists(TEST_JAVA);
+    protected static boolean isRunningFromTestJar() {
+        return !Files.exists(TEST_JAVA);
     }
 
     protected static Collection<CollectedResource> toCollectedResources(Path basePath, List<String> strings) {
@@ -224,7 +227,7 @@ public class AbstractCodegenIT {
 
     protected KogitoBuildContext newContext() {
         return JavaKogitoBuildContext.builder()
-                .withApplicationProperties(new File(TEST_RESOURCES))
+                .withApplicationProperties(TEST_RESOURCES.toFile())
                 .withPackageName(this.getClass().getPackage().getName())
                 .withAddonsConfig(addonsConfig)
                 .build();
@@ -287,6 +290,9 @@ public class AbstractCodegenIT {
      */
     private static File getFileFromResource(Path basePath, String resource) {
         InputStream fileContents = Thread.currentThread().getContextClassLoader().getResourceAsStream(resource);
+        if (fileContents == null) {
+            return null;
+        }
         File copiedResourceFile = null;
         try {
             Path newResourceLocation = basePath.resolve(resource);
@@ -303,6 +309,7 @@ public class AbstractCodegenIT {
 
     protected static void moveAllResourcesToDir() {
         for (String resource : readLinesFromResource("test-resource-index.txt")) {
+            LOGGER.debug("Copying resource: " + resource);
             getFileFromResource(TEST_RESOURCES, resource);
         }
     }

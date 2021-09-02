@@ -21,6 +21,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.junit.jupiter.api.Assumptions;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
@@ -35,6 +37,11 @@ import org.kie.kogito.codegen.openapi.client.OpenApiClientCodegen;
 import static org.assertj.core.api.Assertions.assertThat;
 
 public class OpenApiClientServerlessWorkflowIT extends AbstractCodegenIT {
+
+    @BeforeAll
+    public static void before() {
+        Assumptions.assumeFalse(isRunningFromTestJar());
+    }
 
     @ParameterizedTest
     @ValueSource(strings = { "openapi/petstore-classpath.sw.json" })

@@ -15,6 +15,8 @@
  */
 package org.kie.kogito.codegen;
 
+import org.junit.jupiter.api.Assumptions;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.kie.kogito.Application;
 import org.kie.kogito.codegen.data.Person;
@@ -27,6 +29,11 @@ import org.kie.kogito.rules.RuleUnits;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 public class AnnotatedRuleUnitCompilerIT extends AbstractCodegenIT {
+
+    @BeforeAll
+    public static void before() {
+        Assumptions.assumeFalse(isRunningFromTestJar());
+    }
 
     @Test
     public void testAnnotatedRuleUnit() throws Exception {
