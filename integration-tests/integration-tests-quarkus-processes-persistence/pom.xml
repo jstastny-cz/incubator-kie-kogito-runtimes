@@ -44,6 +44,7 @@
             <container.image.keycloak>${container.image.keycloak}</container.image.keycloak>
             <container.image.infinispan>${container.image.infinispan}</container.image.infinispan>
             <container.image.kafka>${container.image.kafka}</container.image.kafka>
+            <container.image.mongodb>${container.image.mongodb}</container.image.mongodb>
             <native.image.path>${project.build.directory}/${project.build.finalName}-runner</native.image.path>
             <java.util.logging.manager>org.jboss.logmanager.LogManager</java.util.logging.manager>
           </systemPropertyVariables>
@@ -100,6 +101,7 @@
                     <container.image.keycloak>${container.image.keycloak}</container.image.keycloak>
                     <container.image.infinispan>${container.image.infinispan}</container.image.infinispan>
                     <container.image.kafka>${container.image.kafka}</container.image.kafka>
+                    <container.image.mongodb>${container.image.mongodb}</container.image.mongodb>
                     <native.image.path>${project.build.directory}/${project.build.finalName}-runner</native.image.path>
                     <java.util.logging.manager>org.jboss.logmanager.LogManager</java.util.logging.manager>
                   </systemPropertyVariables>
