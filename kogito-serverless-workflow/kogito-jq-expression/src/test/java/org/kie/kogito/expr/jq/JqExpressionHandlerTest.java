@@ -62,7 +62,7 @@ class JqExpressionHandlerTest {
             }
         });
     }
-    
+
     @Test
     void testStringExpression() {
         Expression parsedExpression = ExpressionHandlerFactory.get("jq", ".propertyString");
@@ -104,6 +104,7 @@ class JqExpressionHandlerTest {
         assertTrue(parsedExpression.isValid());
         assertEquals("string 12 true", parsedExpression.eval(getObjectNode(), String.class, getContext()));
     }
+
     @Test
     void testMultiExpressionAsCollection() {
         Expression parsedExpression = ExpressionHandlerFactory.get("jq", ".propertyString,.propertyNum,.propertyBoolean");
@@ -255,14 +256,12 @@ class JqExpressionHandlerTest {
                 Arguments.of("$CONST.\"some.constant\"", "value", getContext()),
                 Arguments.of("$CONST.\"some-constant\"", "value", getContext()),
                 Arguments.of("$CONST.injectedexpression", "$WORKFLOW.instanceId", getContext()),
-                Arguments.of(".arrayOfObjects | .[] | select(.property1 == \"p1-value1\") | .property1", "p1-value1", getContext())
-        );
+                Arguments.of(".arrayOfObjects | .[] | select(.property1 == \"p1-value1\") | .property1", "p1-value1", getContext()));
     }
 
     private static KogitoProcessContext getContext() {
         return MockBuilder.kogitoProcessContext()
-                .withProcessInstanceMock(p->
-                        Mockito.when(p.getId()).thenReturn("1111-2222-3333"))
+                .withProcessInstanceMock(p -> Mockito.when(p.getId()).thenReturn("1111-2222-3333"))
                 .withConstants(Collections.singletonMap("someconstant", "value"))
                 .withConstants(Collections.singletonMap("some.constant", "value"))
                 .withConstants(Collections.singletonMap("some-constant", "value"))

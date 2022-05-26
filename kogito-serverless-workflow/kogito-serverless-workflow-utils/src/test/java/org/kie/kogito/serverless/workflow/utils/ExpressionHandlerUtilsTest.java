@@ -15,16 +15,17 @@
  */
 package org.kie.kogito.serverless.workflow.utils;
 
-import io.serverlessworkflow.api.Workflow;
-import io.serverlessworkflow.api.functions.FunctionDefinition;
+import java.util.Collections;
+import java.util.stream.Stream;
+
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.kie.kogito.serverless.workflow.test.MockBuilder;
 
-import java.util.Collections;
-import java.util.stream.Stream;
+import io.serverlessworkflow.api.Workflow;
+import io.serverlessworkflow.api.functions.FunctionDefinition;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.kie.kogito.serverless.workflow.utils.ExpressionHandlerUtils.trimExpr;
@@ -48,30 +49,29 @@ public class ExpressionHandlerUtilsTest {
     private static Stream<Arguments> provideExpressionsToTestWithWorkflow() {
         return Stream.of(
                 /* expression, expected, workflow */
-                Arguments.of("$WORKFLOW.id", "$WORKFLOW.id",  getWorkflow()),
-                Arguments.of("$WORKFLOW.instanceId", "$WORKFLOW.instanceId",  getWorkflow()),
-                Arguments.of("$WORKFLOW.name", "$WORKFLOW.name",  getWorkflow()),
-                Arguments.of("$CONST.one", "$CONST.one",  getWorkflow()),
-                Arguments.of("$CONST.nonexistent and $CONST.one", "$CONST.nonexistent and $CONST.one",  getWorkflow()),
-                Arguments.of("$CONST.some.nested", "$CONST.some.nested",  getWorkflow()),
-                Arguments.of("$CONST.some-key", "$CONST.some-key",  getWorkflow()),
-                Arguments.of("$CONST.\"some-key\"", "$CONST.\"some-key\"",  getWorkflow()),
-                Arguments.of("$CONST.\"unique-key\"", "$CONST.\"unique-key\"",  getWorkflow()),
-                Arguments.of("$CONST.injectedsecret", "$CONST.injectedsecret",  getWorkflow()),
-                Arguments.of("$CONST.injectedworkflow", "$CONST.injectedworkflow",  getWorkflow()),
-                Arguments.of("$SECRET.lettersonly", "$SECRET.lettersonly",  getWorkflow()),
-                Arguments.of("$SECRET.underscore_secret", "$SECRET.underscore_secret",  getWorkflow()),
-                Arguments.of("$SECRET.dot.secret", "$SECRET.dot.secret",  getWorkflow()),
-                Arguments.of("$SECRET.\"dot.secret\"", "$SECRET.\"dot.secret\"",  getWorkflow()),
-                Arguments.of("$SECRET.dash-secret", "$SECRET.dash-secret",  getWorkflow()),
-                Arguments.of("$SECRET.\"dash-secret\"", "$SECRET.\"dash-secret\"",  getWorkflow()),
-                Arguments.of("fn:expression-workflow-id", "$WORKFLOW.id",  getWorkflow()),
-                Arguments.of("fn:expression.constant", "$CONST.some.nested",  getWorkflow()),
-                Arguments.of("fn:expression_secret", "$SECRET.lettersonly",  getWorkflow()),
-                Arguments.of("something ${ fn:expression.constant }", "something ${ fn:expression.constant }",  getWorkflow()),
-                Arguments.of("${ fn:expression.constant }", "$CONST.some.nested",  getWorkflow()),
-                Arguments.of("{{ fn:expression.constant }}", "$CONST.some.nested",  getWorkflow())
-        );
+                Arguments.of("$WORKFLOW.id", "$WORKFLOW.id", getWorkflow()),
+                Arguments.of("$WORKFLOW.instanceId", "$WORKFLOW.instanceId", getWorkflow()),
+                Arguments.of("$WORKFLOW.name", "$WORKFLOW.name", getWorkflow()),
+                Arguments.of("$CONST.one", "$CONST.one", getWorkflow()),
+                Arguments.of("$CONST.nonexistent and $CONST.one", "$CONST.nonexistent and $CONST.one", getWorkflow()),
+                Arguments.of("$CONST.some.nested", "$CONST.some.nested", getWorkflow()),
+                Arguments.of("$CONST.some-key", "$CONST.some-key", getWorkflow()),
+                Arguments.of("$CONST.\"some-key\"", "$CONST.\"some-key\"", getWorkflow()),
+                Arguments.of("$CONST.\"unique-key\"", "$CONST.\"unique-key\"", getWorkflow()),
+                Arguments.of("$CONST.injectedsecret", "$CONST.injectedsecret", getWorkflow()),
+                Arguments.of("$CONST.injectedworkflow", "$CONST.injectedworkflow", getWorkflow()),
+                Arguments.of("$SECRET.lettersonly", "$SECRET.lettersonly", getWorkflow()),
+                Arguments.of("$SECRET.underscore_secret", "$SECRET.underscore_secret", getWorkflow()),
+                Arguments.of("$SECRET.dot.secret", "$SECRET.dot.secret", getWorkflow()),
+                Arguments.of("$SECRET.\"dot.secret\"", "$SECRET.\"dot.secret\"", getWorkflow()),
+                Arguments.of("$SECRET.dash-secret", "$SECRET.dash-secret", getWorkflow()),
+                Arguments.of("$SECRET.\"dash-secret\"", "$SECRET.\"dash-secret\"", getWorkflow()),
+                Arguments.of("fn:expression-workflow-id", "$WORKFLOW.id", getWorkflow()),
+                Arguments.of("fn:expression.constant", "$CONST.some.nested", getWorkflow()),
+                Arguments.of("fn:expression_secret", "$SECRET.lettersonly", getWorkflow()),
+                Arguments.of("something ${ fn:expression.constant }", "something ${ fn:expression.constant }", getWorkflow()),
+                Arguments.of("${ fn:expression.constant }", "$CONST.some.nested", getWorkflow()),
+                Arguments.of("{{ fn:expression.constant }}", "$CONST.some.nested", getWorkflow()));
     }
 
     private static Workflow getWorkflow() {

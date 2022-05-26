@@ -22,16 +22,12 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.stream.Stream;
 
-import org.jbpm.ruleflow.core.Metadata;
 import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.kie.kogito.internal.process.runtime.KogitoProcessContext;
-import org.kie.kogito.internal.process.runtime.KogitoWorkflowProcess;
-import org.kie.kogito.internal.process.runtime.KogitoWorkflowProcessInstance;
 import org.kie.kogito.jackson.utils.ObjectMapperFactory;
 import org.kie.kogito.process.expr.Expression;
 import org.kie.kogito.process.expr.ExpressionHandlerFactory;
@@ -42,8 +38,6 @@ import org.mockito.Mockito;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ArrayNode;
-import com.fasterxml.jackson.databind.node.NullNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.databind.node.TextNode;
 import com.jayway.jsonpath.PathNotFoundException;
@@ -95,7 +89,7 @@ class JsonPathExpressionHandlerTest {
     void testCollection() {
         Expression parsedExpression = ExpressionHandlerFactory.get("jsonpath", "$.arrayMixed");
         assertTrue(parsedExpression.isValid());
-       assertEquals(Arrays.asList("string1", 12, false, Arrays.asList(1.1, 1.2, 1.3)), parsedExpression.eval(getObjectNode(), Collection.class, getContext()));
+        assertEquals(Arrays.asList("string1", 12, false, Arrays.asList(1.1, 1.2, 1.3)), parsedExpression.eval(getObjectNode(), Collection.class, getContext()));
     }
 
     @Test
@@ -225,12 +219,12 @@ class JsonPathExpressionHandlerTest {
                 Arguments.of("$SECRET.lettersonly", "secretlettersonly", getContext()),
                 Arguments.of("SECRET.lettersonly", "secretlettersonly", getContext()), // a side effect of jsonpath and prior variable resolution
                 Arguments.of("$SECRET.none", "null", getContext()),
-//                Arguments.of("$SECRET.dot.secret", "null", getContext()), // exception due to missing object at path .dot
+                //                Arguments.of("$SECRET.dot.secret", "null", getContext()), // exception due to missing object at path .dot
                 Arguments.of("$SECRET[\"dot.secret\"]", "secretdotsecret", getContext()),
                 Arguments.of("$SECRET[\"dash-secret\"]", "secretdashsecret", getContext()),
                 Arguments.of("$CONST.someconstant", "value", getContext()),
                 Arguments.of("$CONST[\"someconstant\"]", "value", getContext()),
-//                Arguments.of("$CONST.some.constant", "null", getContext()), // exception due to missing object at path .some
+                //                Arguments.of("$CONST.some.constant", "null", getContext()), // exception due to missing object at path .some
                 Arguments.of("$CONST[\"some.constant\"]", "value", getContext()),
                 Arguments.of("$CONST[\"some-constant\"]", "value", getContext()),
                 Arguments.of("$CONST.injectedexpression", "$WORKFLOW.instanceId", getContext()),
@@ -240,8 +234,7 @@ class JsonPathExpressionHandlerTest {
 
     private static KogitoProcessContext getContext() {
         return MockBuilder.kogitoProcessContext()
-                .withProcessInstanceMock(p->
-                        Mockito.when(p.getId()).thenReturn("1111-2222-3333"))
+                .withProcessInstanceMock(p -> Mockito.when(p.getId()).thenReturn("1111-2222-3333"))
                 .withConstants(Collections.singletonMap("someconstant", "value"))
                 .withConstants(Collections.singletonMap("some.constant", "value"))
                 .withConstants(Collections.singletonMap("some-constant", "value"))
