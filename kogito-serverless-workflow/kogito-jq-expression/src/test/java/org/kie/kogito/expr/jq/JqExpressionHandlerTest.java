@@ -230,6 +230,27 @@ class JqExpressionHandlerTest {
         assertEquals(new TextNode("1111-2222-3333"), parsedExpression.eval(ObjectMapperFactory.get().createObjectNode(), JsonNode.class, getContext()));
     }
 
+    @Test
+    void testConstPropertyFromJsonAccessible() {
+        Expression parsedExpression = ExpressionHandlerFactory.get("jq", ".CONST.property1");
+        assertTrue(parsedExpression.isValid());
+        assertEquals("accessible_value", parsedExpression.eval(getObjectNode(), String.class, getContext()));
+    }
+
+    @Test
+    void testSecretPropertyFromJsonAccessible() {
+        Expression parsedExpression = ExpressionHandlerFactory.get("jq", ".SECRET.property1");
+        assertTrue(parsedExpression.isValid());
+        assertEquals("accessible_value", parsedExpression.eval(getObjectNode(), String.class, getContext()));
+    }
+
+    @Test
+    void testWorkflowPropertyFromJsonAccessible() {
+        Expression parsedExpression = ExpressionHandlerFactory.get("jq", ".WORKFLOW.property1");
+        assertTrue(parsedExpression.isValid());
+        assertEquals("accessible_value", parsedExpression.eval(getObjectNode(), String.class, getContext()));
+    }
+
     @ParameterizedTest(name = "{index} \"{0}\" is resolved to \"{1}\"")
     @MethodSource("provideMagicWordExpressionsToTest")
     void testMagicWordsExpressions(String expression, String expectedResult, KogitoProcessContext context) {
@@ -298,7 +319,9 @@ class JqExpressionHandlerTest {
                 .add(12)
                 .add(false)
                 .add(objectMapper.createArrayNode().add(1.1).add(1.2).add(1.3));
-
+        objectNode.putObject("CONST").put("property1", "accessible_value");
+        objectNode.putObject("SECRET").put("property1", "accessible_value");
+        objectNode.putObject("WORKFLOW").put("property1", "accessible_value");
         return objectNode;
     }
 }

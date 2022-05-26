@@ -40,6 +40,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.databind.node.TextNode;
+import com.jayway.jsonpath.JsonPathException;
 import com.jayway.jsonpath.PathNotFoundException;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -204,6 +205,30 @@ class JsonPathExpressionHandlerTest {
         assertEquals(new TextNode("1111-2222-3333"), parsedExpression.eval(ObjectMapperFactory.get().createObjectNode(), JsonNode.class, getContext()));
     }
 
+    @Test
+    void testConstPropertyFromJsonAccessible() {
+        Expression parsedExpression = ExpressionHandlerFactory.get("jsonpath", "$.CONST.property1");
+        assertTrue(parsedExpression.isValid());
+        // it's not considering the JsonNode property 'CONST', but '$CONST' variable
+        assertThrows(JsonPathException.class, () -> parsedExpression.eval(getObjectNode(), String.class, getContext()));
+    }
+
+    @Test
+    void testSecretPropertyFromJsonAccessible() {
+        Expression parsedExpression = ExpressionHandlerFactory.get("jsonpath", "$.SECRET.property1");
+        assertTrue(parsedExpression.isValid());
+        // it's not considering the JsonNode property 'SECRET', but '$SECRET' variable
+        assertEquals("null", parsedExpression.eval(getObjectNode(), String.class, getContext()));
+    }
+
+    @Test
+    void testWorkflowPropertyFromJsonAccessible() {
+        Expression parsedExpression = ExpressionHandlerFactory.get("jsonpath", "$.WORKFLOW.property1");
+        assertTrue(parsedExpression.isValid());
+        // it's not considering the JsonNode property 'WORKFLOW', but '$WORKFLOW' variable
+        assertThrows(IllegalArgumentException.class, () -> parsedExpression.eval(getObjectNode(), String.class, getContext()));
+    }
+
     @ParameterizedTest(name = "{index} \"{0}\" is resolved to \"{1}\"")
     @MethodSource("provideMagicWordExpressionsToTest")
     void testMagicWordsExpressions(String expression, String expectedResult, KogitoProcessContext context) {
@@ -271,6 +296,9 @@ class JsonPathExpressionHandlerTest {
                 .add(12)
                 .add(false)
                 .add(objectMapper.createArrayNode().add(1.1).add(1.2).add(1.3));
+        objectNode.putObject("CONST").put("property1", "accessible_value");
+        objectNode.putObject("SECRET").put("property1", "accessible_value");
+        objectNode.putObject("WORKFLOW").put("property1", "accessible_value");
 
         return objectNode;
     }
