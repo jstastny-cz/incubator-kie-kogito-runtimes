@@ -39,6 +39,10 @@ import static org.mockito.Mockito.when;
 
 public class MockBuilder {
 
+    private MockBuilder() {
+        throw new IllegalStateException("Utility class");
+    }
+
     public static WorkflowMockBuilder workflow() {
         return new WorkflowMockBuilder();
     }
@@ -48,17 +52,11 @@ public class MockBuilder {
     }
 
     public static class WorkflowMockBuilder {
-        private Map constants = new HashMap();
-        private Consumer<Functions> functionsMockManipulation;
-        private List<Consumer<FunctionDefinition>> functionDefinitionsMockManipulations = new ArrayList();
+        private Map<String, Object> constants = new HashMap<>();
+        private List<Consumer<FunctionDefinition>> functionDefinitionsMockManipulations = new ArrayList<>();
 
-        public WorkflowMockBuilder withConstants(Map constants) {
+        public WorkflowMockBuilder withConstants(Map<String, Object> constants) {
             this.constants.putAll(constants);
-            return this;
-        }
-
-        public WorkflowMockBuilder withFunctionsMock(Consumer<Functions> functionsMockManipulation) {
-            this.functionsMockManipulation = functionsMockManipulation;
             return this;
         }
 
@@ -81,29 +79,20 @@ public class MockBuilder {
             }).collect(Collectors.toList());
             Functions functions = new Functions(functionDefinitionsMocks);
             when(workflowMock.getFunctions()).thenReturn(functions);
-            if (functionsMockManipulation != null) {
-                functionsMockManipulation.accept(functions);
-            }
             return workflowMock;
         }
     }
 
     public static class KogitoProcessContextMockBuilder {
         private Consumer<KogitoProcessInstance> processInstanceMockManipulation;
-        private Consumer<Process> processMockManipulation;
-        private Map constants = new HashMap();
+        private Map<String, Object> constants = new HashMap<>();
 
         public KogitoProcessContextMockBuilder withProcessInstanceMock(Consumer<KogitoProcessInstance> processInstanceMockManipulation) {
             this.processInstanceMockManipulation = processInstanceMockManipulation;
             return this;
         }
 
-        public KogitoProcessContextMockBuilder withProcessMock(Consumer<Process> processMockManipulation) {
-            this.processMockManipulation = processMockManipulation;
-            return this;
-        }
-
-        public KogitoProcessContextMockBuilder withConstants(Map constants) {
+        public KogitoProcessContextMockBuilder withConstants(Map<String, Object> constants) {
             this.constants.putAll(constants);
             return this;
         }
@@ -116,9 +105,6 @@ public class MockBuilder {
             when(kogitoProcessInstanceMock.getProcess()).thenReturn(processMock);
             if (processInstanceMockManipulation != null) {
                 processInstanceMockManipulation.accept(kogitoProcessInstanceMock);
-            }
-            if (processMockManipulation != null) {
-                processMockManipulation.accept(processMock);
             }
             if (constants != null && !constants.isEmpty()) {
                 when(processMock.getMetaData()).thenReturn(Collections.singletonMap(Metadata.CONSTANTS, ObjectMapperFactory.get().valueToTree(constants)));
