@@ -20,6 +20,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Stream;
 
 import org.junit.jupiter.api.BeforeAll;
@@ -56,10 +57,12 @@ class JqExpressionHandlerTest {
         configMap.put("dash-secret", "secretdashsecret");
 
         ConfigResolverHolder.setConfigResolver(new ConfigResolver() {
+
             @Override
-            public <T> T getConfigProperty(String name, Class<T> clazz, T defaultValue) {
-                return (T) configMap.get(name);
+            public <T> Optional<T> getConfigProperty(String name, Class<T> clazz) {
+                return Optional.ofNullable(clazz.cast(configMap.get(name)));
             }
+            
         });
     }
 
