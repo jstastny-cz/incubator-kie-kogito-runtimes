@@ -2,10 +2,10 @@
 * This file is describing all the Jenkins jobs in the DSL format (see https://plugins.jenkins.io/job-dsl/)
 * needed by the Kogito pipelines.
 *
-* The main part of Jenkins job generation is defined into the https://github.com/kiegroup/kogito-pipelines repository.
+* The main part of Jenkins job generation is defined into the https://github.com/apache/incubator-kie-kogito-pipelines repository.
 *
 * This file is making use of shared libraries defined in
-* https://github.com/kiegroup/kogito-pipelines/tree/main/dsl/seed/src/main/groovy/org/kie/jenkins/jobdsl.
+* https://github.com/apache/incubator-kie-kogito-pipelines/tree/main/dsl/seed/src/main/groovy/org/kie/jenkins/jobdsl.
 */
 
 import org.kie.jenkins.jobdsl.model.JenkinsFolder
@@ -47,24 +47,24 @@ Map getMultijobPRConfig(JenkinsFolder jobFolder) {
             ], [
                 id: 'kogito-apps',
                 dependsOn: 'kogito-runtimes',
-                repository: 'kogito-apps',
+                repository: 'incubator-kie-kogito-apps',
             ], [
                 id: 'kogito-quarkus-examples',
-                repository: 'kogito-examples',
+                repository: 'incubator-kie-kogito-examples',
                 dependsOn: 'kogito-apps',
                 env : [
                     KOGITO_EXAMPLES_SUBFOLDER_POM: 'kogito-quarkus-examples/',
                 ],
             ], [
                 id: 'kogito-springboot-examples',
-                repository: 'kogito-examples',
+                repository: 'incubator-kie-kogito-examples',
                 dependsOn: 'kogito-apps',
                 env : [
                     KOGITO_EXAMPLES_SUBFOLDER_POM: 'kogito-springboot-examples/',
                 ],
             ], [
                 id: 'serverless-workflow-examples',
-                repository: 'kogito-examples',
+                repository: 'incubator-kie-kogito-examples',
                 dependsOn: 'kogito-apps',
                 env : [
                     KOGITO_EXAMPLES_SUBFOLDER_POM: 'serverless-workflow-examples/',
@@ -114,7 +114,7 @@ setupReleasePromoteJob()
 
 // Tools job
 if (isMainStream()) {
-    KogitoJobUtils.createQuarkusUpdateToolsJob(this, 'kogito-runtimes', [
+    KogitoJobUtils.createQuarkusVersionUpdateToolsJobForCurrentRepo(this, [
         modules: [ 'kogito-dependencies-bom', 'kogito-build-parent', 'kogito-quarkus-bom', 'kogito-build-no-bom-parent' ],
         compare_deps_remote_poms: [ 'io.quarkus:quarkus-bom' ],
         properties: [ 'version.io.quarkus' ],
@@ -144,7 +144,6 @@ void createSetupBranchJob() {
     def jobParams = JobParamsUtils.getBasicJobParams(this, 'kogito-runtimes', JobType.SETUP_BRANCH, "${jenkins_path}/Jenkinsfile.setup-branch", 'Kogito Runtimes Setup branch')
     JobParamsUtils.setupJobParamsAgentDockerBuilderImageConfiguration(this, jobParams)
     jobParams.env.putAll([
-        REPO_NAME: 'kogito-runtimes',
         JENKINS_EMAIL_CREDS_ID: "${JENKINS_EMAIL_CREDS_ID}",
 
         GIT_AUTHOR: "${GIT_AUTHOR_NAME}",
