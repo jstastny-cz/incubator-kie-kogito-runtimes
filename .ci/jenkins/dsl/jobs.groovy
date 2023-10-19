@@ -93,7 +93,7 @@ List getRuntimesBuildMvnOptions(JenkinsFolder jobFolder) {
 }
 
 // PR checks
-Utils.isMainBranch(this) && KogitoJobTemplate.createPullRequestMultibranchPipelineJob(this, "${jenkins_path}/Jenkinsfile")
+KogitoJobTemplate.createPullRequestMultibranchPipelineJob(this, JobParamsUtils.getBasicJobParams(this, 'kogito-runtimes', JobType.PULL_REQUEST, "${jenkins_path}/Jenkinsfile", "Kogito Runtimes PR check"))
 
 // Init branch
 createSetupBranchJob()
