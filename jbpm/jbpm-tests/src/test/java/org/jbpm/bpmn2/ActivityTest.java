@@ -97,60 +97,7 @@ import org.jbpm.bpmn2.service.ServiceTaskModel;
 import org.jbpm.bpmn2.service.ServiceTaskProcess;
 import org.jbpm.bpmn2.service.ServiceTaskWebServiceModel;
 import org.jbpm.bpmn2.service.ServiceTaskWebServiceProcess;
-import org.jbpm.bpmn2.subprocess.AssignmentProcessModel;
-import org.jbpm.bpmn2.subprocess.AssignmentProcessProcess;
-import org.jbpm.bpmn2.subprocess.AssignmentSubProcessProcess;
-import org.jbpm.bpmn2.subprocess.CallActivity2Model;
-import org.jbpm.bpmn2.subprocess.CallActivity2Process;
-import org.jbpm.bpmn2.subprocess.CallActivityMIModel;
-import org.jbpm.bpmn2.subprocess.CallActivityMIProcess;
-import org.jbpm.bpmn2.subprocess.CallActivityModel;
-import org.jbpm.bpmn2.subprocess.CallActivityProcess;
-import org.jbpm.bpmn2.subprocess.CallActivityProcessBoundaryErrorModel;
-import org.jbpm.bpmn2.subprocess.CallActivityProcessBoundaryErrorProcess;
-import org.jbpm.bpmn2.subprocess.CallActivityProcessWithBoundaryEventModel;
-import org.jbpm.bpmn2.subprocess.CallActivityProcessWithBoundaryEventProcess;
-import org.jbpm.bpmn2.subprocess.CallActivitySubProcessBoundaryErrorModel;
-import org.jbpm.bpmn2.subprocess.CallActivitySubProcessBoundaryErrorProcess;
-import org.jbpm.bpmn2.subprocess.CallActivitySubProcessModel;
-import org.jbpm.bpmn2.subprocess.CallActivitySubProcessProcess;
-import org.jbpm.bpmn2.subprocess.CallActivitySubProcessWithBoundaryEventModel;
-import org.jbpm.bpmn2.subprocess.CallActivitySubProcessWithBoundaryEventProcess;
-import org.jbpm.bpmn2.subprocess.CallActivityWithBoundaryEventModel;
-import org.jbpm.bpmn2.subprocess.CallActivityWithBoundaryEventProcess;
-import org.jbpm.bpmn2.subprocess.CallActivityWithIOexpressionModel;
-import org.jbpm.bpmn2.subprocess.CallActivityWithIOexpressionProcess;
-import org.jbpm.bpmn2.subprocess.ErrorsBetweenProcessModel;
-import org.jbpm.bpmn2.subprocess.ErrorsBetweenProcessProcess;
-import org.jbpm.bpmn2.subprocess.ErrorsBetweenSubProcessProcess;
-import org.jbpm.bpmn2.subprocess.FlowChild1Model;
-import org.jbpm.bpmn2.subprocess.FlowChild1Process;
-import org.jbpm.bpmn2.subprocess.FlowChild2Model;
-import org.jbpm.bpmn2.subprocess.FlowChild2Process;
-import org.jbpm.bpmn2.subprocess.FlowChild3Model;
-import org.jbpm.bpmn2.subprocess.FlowChild3Process;
-import org.jbpm.bpmn2.subprocess.FlowMainModel;
-import org.jbpm.bpmn2.subprocess.FlowMainProcess;
-import org.jbpm.bpmn2.subprocess.InputMappingUsingValueModel;
-import org.jbpm.bpmn2.subprocess.InputMappingUsingValueProcess;
-import org.jbpm.bpmn2.subprocess.MainGroupAssignmentModel;
-import org.jbpm.bpmn2.subprocess.MainGroupAssignmentProcess;
-import org.jbpm.bpmn2.subprocess.SingleTaskWithVarDefModel;
-import org.jbpm.bpmn2.subprocess.SingleTaskWithVarDefProcess;
-import org.jbpm.bpmn2.subprocess.SubProcessWithEntryExitScriptsModel;
-import org.jbpm.bpmn2.subprocess.SubProcessWithEntryExitScriptsProcess;
-import org.jbpm.bpmn2.subprocess.SubProcessWithTerminateEndEventModel;
-import org.jbpm.bpmn2.subprocess.SubProcessWithTerminateEndEventProcess;
-import org.jbpm.bpmn2.subprocess.SubProcessWithTerminateEndEventProcessScopeModel;
-import org.jbpm.bpmn2.subprocess.SubProcessWithTerminateEndEventProcessScopeProcess;
-import org.jbpm.bpmn2.subprocess.SubProcessWithTypeVariableModel;
-import org.jbpm.bpmn2.subprocess.SubProcessWithTypeVariableProcess;
-import org.jbpm.bpmn2.subprocess.SubprocessGroupAssignmentModel;
-import org.jbpm.bpmn2.subprocess.SubprocessGroupAssignmentProcess;
-import org.jbpm.bpmn2.subprocess.UserTaskChildModel;
-import org.jbpm.bpmn2.subprocess.UserTaskChildProcess;
-import org.jbpm.bpmn2.subprocess.UserTaskMainModel;
-import org.jbpm.bpmn2.subprocess.UserTaskMainProcess;
+import org.jbpm.bpmn2.subprocess.*;
 import org.jbpm.bpmn2.task.ReceiveTaskModel;
 import org.jbpm.bpmn2.task.ReceiveTaskProcess;
 import org.jbpm.bpmn2.task.SendTaskModel;
@@ -885,6 +832,82 @@ public class ActivityTest extends JbpmBpmn2TestCase {
         listOut = processInstance.variables().getListOut();
         assertThat(listOut).isNotNull().hasSize(2).containsExactly("new value", "new value");
     }
+
+    @Test
+    public void testCallActivityMISignal() throws Exception {
+        Application app = ProcessTestHelper.newApplication();
+        TestWorkItemHandler workItemHandler = new TestWorkItemHandler();
+        ProcessTestHelper.registerHandler(app, "Human Task",
+                workItemHandler);
+        final Map<String, List<String>> subprocessStarted = new HashMap<>();
+        final List<String> instancesCompleted = new ArrayList<>();
+        DefaultKogitoProcessEventListener listener = new DefaultKogitoProcessEventListener() {
+
+            @Override
+            public void beforeProcessStarted(ProcessStartedEvent event) {
+                if (event.getProcessInstance().getProcessId().equals("CallActivitySubProcessSignal")) {
+                    KogitoProcessInstance instance = (KogitoProcessInstance) event.getProcessInstance();
+                    String parentId = instance.getVariables().get("parentId").toString();
+                    Optional.ofNullable(subprocessStarted.get(parentId)).orElseGet(() -> {
+                        subprocessStarted.put(parentId, new ArrayList<>());
+                        return subprocessStarted.get(parentId);
+                    }).add(instance.getId());
+                }
+            }
+
+            @Override
+            public void afterProcessCompleted(ProcessCompletedEvent event) {
+                instancesCompleted.add(event.getProcessInstance().getId());
+            }
+
+        };
+        ProcessTestHelper.registerProcessEventListener(app, listener);
+        org.kie.kogito.process.Process<CallActivitySubProcessSignalModel> subprocess = CallActivitySubProcessSignalProcess.newProcess(app);
+        org.kie.kogito.process.Process<CallActivityMISignalModel> process = CallActivityMISignalProcess.newProcess(app);
+        CallActivityMISignalModel model = process.createModel();
+        List<Integer> list = new ArrayList<>();
+        list.add(1);
+        list.add(2);
+        model.setMyList(list);
+        model.setOutputList(new ArrayList<>());
+        ProcessInstance<CallActivityMISignalModel> processInstance = process.createInstance(model);
+        processInstance.start();
+        ProcessInstance<CallActivityMISignalModel> processInstance2 = process.createInstance(model);
+        processInstance2.start();
+
+        assertThat(processInstance).extracting(ProcessInstance::status).isEqualTo(ProcessInstance.STATE_ACTIVE);
+        assertThat(processInstance2).extracting(ProcessInstance::status).isEqualTo(ProcessInstance.STATE_ACTIVE);
+        assertThat(subprocessStarted).hasSize(2);
+        assertThat(subprocessStarted.get(processInstance.id())).hasSize(2);
+        assertThat(subprocessStarted.get(processInstance2.id())).hasSize(2);
+
+        ProcessInstance<CallActivitySubProcessSignalModel> subprocessInstance = subprocess.instances().findById(subprocessStarted.get(processInstance.id()).get(0)).get();
+
+        assertThat(subprocessInstance).extracting(ProcessInstance::status).isEqualTo(ProcessInstance.STATE_ACTIVE);
+        assertThat(subprocessInstance).extracting(it -> it.variables().getParentId()).isEqualTo(processInstance.id());
+
+        org.kie.kogito.internal.process.workitem.KogitoWorkItem workItem =
+                workItemHandler.getWorkItems().stream().filter(it -> it.getProcessInstance().getId().equals(subprocessInstance.id())).findFirst().get();
+        assertThat(workItem).isNotNull();
+        ProcessTestHelper.completeWorkItem(subprocessInstance, emptyMap(), "jdoe", "admin");
+
+        assertThat(subprocessInstance.status()).isEqualTo(org.jbpm.process.instance.ProcessInstance.STATE_COMPLETED);
+        assertThat(instancesCompleted).hasSize(2).containsAll(subprocessStarted.get(processInstance.id()));
+        assertThat(processInstance).extracting(it -> subprocess.instances().findById(subprocessStarted.get(it.id()).get(0))).isEqualTo(Optional.empty());
+        assertThat(processInstance).extracting(it -> subprocess.instances().findById(subprocessStarted.get(it.id()).get(1))).isEqualTo(Optional.empty());
+
+        assertThat(processInstance2).extracting(it -> subprocess.instances().findById(subprocessStarted.get(it.id()).get(0)).get()).extracting(ProcessInstance::status)
+                .isEqualTo(ProcessInstance.STATE_ACTIVE);
+        assertThat(processInstance2).extracting(it -> subprocess.instances().findById(subprocessStarted.get(it.id()).get(1)).get()).extracting(ProcessInstance::status)
+                .isEqualTo(ProcessInstance.STATE_ACTIVE);
+
+        assertThat(processInstance.status()).isEqualTo(org.jbpm.process.instance.ProcessInstance.STATE_ACTIVE);
+        assertThat(processInstance2.status()).isEqualTo(org.jbpm.process.instance.ProcessInstance.STATE_ACTIVE);
+
+        assertThat(processInstance.variables().getOutputList()).containsAll(List.of("1", "2"));
+    }
+
+    // here
 
     @Test
     public void testCallActivity2() {
